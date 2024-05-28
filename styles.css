@@ -1,0 +1,188 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: #333;
+    color: #fff;
+    padding: 1em;
+    text-align: center;
+}
+
+main {
+    padding: 1em;
+}
+
+input#search {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.tab-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.tab-list {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    overflow-x: auto;
+    border-bottom: 1px solid #ccc;
+    margin-bottom: 20px;
+}
+
+.tab-list li {
+    margin: 0 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    background-color: #f1f1f1;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.tab-list li .flag-icon {
+    display: block;
+    margin-top: 5px;
+    font-size: 24px;
+}
+
+.tab-list li.active {
+    background-color: #fff;
+    border-top: 2px solid #007BFF;
+}
+
+.tab-content {
+    border: 1px solid #ccc;
+    padding: 20px;
+    background-color: #fff;
+    box-sizing: border-box;
+}
+
+.location {
+    display: none;
+}
+
+.location.active {
+    display: block;
+}
+
+.location-content {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.location-content.even {
+    background-color: #f9f9f9;
+}
+
+.location-content.odd {
+    background-color: #ffffff;
+}
+
+.tab-dropdown {
+    display: none;
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+}
+
+.state-filters {
+    margin-bottom: 20px;
+}
+
+.state-filters button {
+    margin-right: 10px;
+    padding: 10px;
+    cursor: pointer;
+    background-color: #f1f1f1;
+    border: 1px solid #ccc;
+}
+/* Ensure .state-filter-dropdown is hidden by default */
+.state-filter-dropdown {
+    display: none;
+}
+/* Responsive styling */
+@media (max-width: 768px) {
+    .tab-list {
+        display: none;
+    }
+
+    .tab-dropdown {
+        display: block;
+    }
+
+    .location-content {
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    .location-content h2 {
+        font-size: 18px;
+    }
+
+    .location-content p {
+        font-size: 14px;
+    }
+
+    .tab-content {
+        padding: 10px;
+    }
+
+    .state-filters {
+        flex-direction: column;
+    }
+
+    .state-filters button {
+        margin: 5px 0;
+        padding: 10px;
+        width: 100%;
+    }
+	
+	    .state-filters {
+        display: none;
+    }
+
+    .state-filter-dropdown {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        margin-bottom: 20px;
+        box-sizing: border-box; 
+
+
+}
+
+/* Ensure the map fits the width of the screen */
+.location-content iframe {
+    width: 100%;
+    height: 200px; /* Adjust height as needed */
+    border: none;
+}
+
+/* Center flag icons within tabs */
+.tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+
+.tab .flag-icon {
+    margin-top: 5px;
+    font-size: 24px;
+}
