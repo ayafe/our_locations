@@ -78,6 +78,7 @@ function activateTabByCountryCode(countryCode) {
 }
 
 function activateDefaultTab() {
+    console.log('Activating default tab: Australia');
     const auSheet = sheets.find(sheet => sheet.countryCode === 'AU');
     const continentId = auSheet.displayName.replace(/\s+/g, '-').toLowerCase();
     activateTab(continentId);
@@ -89,6 +90,7 @@ function activateDefaultTab() {
 }
 
 function activateTab(tabId) {
+    console.log('Activating tab:', tabId);
     const tabs = document.querySelectorAll('.tab');
     const locations = document.querySelectorAll('.location');
 
