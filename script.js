@@ -34,31 +34,15 @@ async function fetchLocations() {
 }
 
 async function activateTabBasedOnLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(async (position) => {
-            const { latitude, longitude } = position.coords;
-            const countryCode = await getCountryCodeFromCoordinates(latitude, longitude);
-            activateTabByCountryCode(countryCode);
-        }, (error) => {
-            console.error('Geolocation error:', error);
-            activateDefaultTab();
-        });
-    } else {
-        console.error('Geolocation is not supported by this browser.');
-        activateDefaultTab();
-    }
-}
-
-async function getCountryCodeFromCoordinates(latitude, longitude) {
-    const endpoint = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`;
-
     try {
-        const response = await fetch(endpoint);
-        const data = await response.json();
-        return data.countryCode;
+        const response = await fetch('https://ipinfo.io/json');
+        const locationData = await response.json();
+        const userCountryCode = locationData.country;
+
+        activateTabByCountryCode(userCountryCode);
     } catch (error) {
-        console.error('Error fetching country code:', error);
-        return null;
+        console.error('Error fetching geolocation:', error);
+        activateDefaultTab();
     }
 }
 
