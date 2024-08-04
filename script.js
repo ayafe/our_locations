@@ -11,7 +11,7 @@ const sheets = [
 
 async function fetchLocations() {
     const promises = sheets.map(sheet => {
-        const range = `${sheet.name}!A:H`;  // Ensure we fetch columns A to H
+        const range = `${sheet.name}!A:H`;
         const endpoint = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?key=${apiKey}`;
         return fetch(endpoint).then(response => response.json()).then(data => ({ sheet, data }));
     });
@@ -27,137 +27,64 @@ async function fetchLocations() {
         });
 
         addSearchFunctionality();
-        await activateTabBasedOnLocation(); // Activate the tab based on user's location
+        await activateTabBasedOnLocation();
     } catch (error) {
         console.error('Error fetching locations:', error);
     }
 }
 
-function displayLocations(locations, sheetDisplayName, flagIcon) {
-    const tabList = document.getElementById('tab-list');
-    const tabContent = document.getElementById('tab-content');
-    const tabDropdown = document.getElementById('tab-dropdown');
-
-    if (!tabList || !tabContent || !tabDropdown) {
-        console.error('Required DOM elements not found');
-        return;
-    }
-
-    const continentHeader = document.createElement('li');
-    const continentDropdownOption = document.createElement('option');
-    const continentTabContent = document.createElement('div');
-    const stateFilters = new Set();
-
-    let openLocationsCount = 0;
-
-    const continentId = sheetDisplayName.replace(/\s+/g, '-').toLowerCase();
-    continentHeader.className = 'tab';
-    continentHeader.innerHTML = `${sheetDisplayName}<br><span class="flag-icon flag-icon-${flagIcon}"></span>`;
-    continentHeader.setAttribute('data-tab', continentId);
-    continentHeader.onclick = () => activateTab(continentId);
-
-    continentDropdownOption.value = continentId;
-    continentDropdownOption.innerHTML = `${sheetDisplayName} <span class="flag-icon flag-icon-${flagIcon}"></span>`;
-
-    continentTabContent.id = continentId;
-    continentTabContent.className = 'location';
-
-    locations.forEach((location, index) => {
-        if (index === 0) {
-            console.log(`Header Row: ${location}`);
-            return; // Skip header row
-        }
-
-        const [state, name, url, address, notes, mapLocation, country, open] = location;
-
-        console.log(`Sheet: ${sheetDisplayName}, Row: ${index}, Open: ${open}, Country: ${country}, StoreName: ${name}`);
-
-        if (open === 'TRUE') {  // Check if the value is 'TRUE'
-            openLocationsCount++;
-            stateFilters.add(state);
-
-            const locationDiv = document.createElement('div');
-            locationDiv.className = `location-content ${index % 2 === 0 ? 'even' : 'odd'}`;
-            locationDiv.setAttribute('data-state', state);
-
-            locationDiv.innerHTML = `
-                <h2>${name}</h2>
-                <p><strong>Address:</strong> ${address}</p>
-                <p><strong>Notes:</strong> ${notes}</p>
-                <p><strong>Opening Hours:</strong> <a href="${url}" target="_blank">View Opening Hours</a></p>
-                <p>${mapLocation}</p>
-            `;
-
-            continentTabContent.appendChild(locationDiv);
-        }
-    });
-
-    if (openLocationsCount > 0) {
-        // Create a state filter dropdown for mobile
-        const stateFilterDropdown = document.createElement('select');
-        stateFilterDropdown.className = 'state-filter-dropdown';
-        stateFilterDropdown.innerHTML = `<option value="">All States</option>`;
-        stateFilters.forEach(state => {
-            const option = document.createElement('option');
-            option.value = state;
-            option.textContent = state;
-            stateFilterDropdown.appendChild(option);
+async function activateTabBasedOnLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            const { latitude, longitude } = position.coords;
+            const countryCode = await getCountryCodeFromCoordinates(latitude, longitude);
+            activateTabByCountryCode(countryCode);
+        }, (error) => {
+            console.error('Geolocation error:', error);
+            activateDefaultTab();
         });
-        stateFilterDropdown.onchange = () => filterByState(continentId, stateFilterDropdown.value);
-
-        // Create the state filter buttons for desktop
-        const stateFilterContainer = document.createElement('div');
-        stateFilterContainer.className = 'state-filters';
-        stateFilterContainer.innerHTML = `<strong>Filter by State:</strong>`;
-        stateFilters.forEach(state => {
-            const button = document.createElement('button');
-            button.textContent = state;
-            button.onclick = () => filterByState(continentId, state);
-            stateFilterContainer.appendChild(button);
-        });
-
-        const storeCount = document.createElement('p');
-        storeCount.innerHTML = `<strong>Total stores: ${openLocationsCount}</strong>`;
-        continentTabContent.prepend(storeCount);
-        continentTabContent.prepend(stateFilterContainer);
-        continentTabContent.prepend(stateFilterDropdown);
-
-        tabList.appendChild(continentHeader);
-        tabDropdown.appendChild(continentDropdownOption);
-        tabContent.appendChild(continentTabContent);
+    } else {
+        console.error('Geolocation is not supported by this browser.');
+        activateDefaultTab();
     }
-
-    tabDropdown.onchange = () => activateTab(tabDropdown.value);
 }
 
-async function activateTabBasedOnLocation() {
+async function getCountryCodeFromCoordinates(latitude, longitude) {
+    const endpoint = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`;
+
     try {
-        const response = await fetch('https://geolocation-db.com/json/');
-        const locationData = await response.json();
-        const userCountryCode = locationData.country_code;
-
-        const sheet = sheets.find(sheet => sheet.countryCode === userCountryCode);
-        if (sheet) {
-            const continentId = sheet.displayName.replace(/\s+/g, '-').toLowerCase();
-            activateTab(continentId);
-
-            // Set the dropdown to the user's location
-            const tabDropdown = document.getElementById('tab-dropdown');
-            if (tabDropdown) {
-                tabDropdown.value = continentId;
-            }
-        } else {
-            const firstTab = document.querySelector('.tab');
-            if (firstTab) {
-                activateTab(firstTab.getAttribute('data-tab')); // Default to first tab if no match found
-            }
-        }
+        const response = await fetch(endpoint);
+        const data = await response.json();
+        return data.countryCode;
     } catch (error) {
-        console.error('Error fetching geolocation:', error);
-        const firstTab = document.querySelector('.tab');
-        if (firstTab) {
-            activateTab(firstTab.getAttribute('data-tab')); // Default to first tab if geolocation fails
+        console.error('Error fetching country code:', error);
+        return null;
+    }
+}
+
+function activateTabByCountryCode(countryCode) {
+    const sheet = sheets.find(sheet => sheet.countryCode === countryCode);
+    if (sheet) {
+        const continentId = sheet.displayName.replace(/\s+/g, '-').toLowerCase();
+        activateTab(continentId);
+
+        const tabDropdown = document.getElementById('tab-dropdown');
+        if (tabDropdown) {
+            tabDropdown.value = continentId;
         }
+    } else {
+        activateDefaultTab();
+    }
+}
+
+function activateDefaultTab() {
+    const auSheet = sheets.find(sheet => sheet.countryCode === 'AU');
+    const continentId = auSheet.displayName.replace(/\s+/g, '-').toLowerCase();
+    activateTab(continentId);
+
+    const tabDropdown = document.getElementById('tab-dropdown');
+    if (tabDropdown) {
+        tabDropdown.value = continentId;
     }
 }
 
